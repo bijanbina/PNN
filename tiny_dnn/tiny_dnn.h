@@ -10,7 +10,7 @@
 #include "tiny_dnn/config.h"
 #include "tiny_dnn/network.h"
 #include "tiny_dnn/nodes.h"
-#include "td_network.h"
+#include "tiny_dnn/td_network.h"
 
 #include <cereal/types/tuple.hpp>
 #include <cereal/types/utility.hpp>

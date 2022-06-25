@@ -221,7 +221,7 @@ class layer : public node {
     }
   }
 
-  void set_in_data(const vec_t *data)
+  void set_in_data(float *data, int len)
   {
       if (in_type_[0]!=vector_type::data)
           return;
@@ -232,8 +232,11 @@ class layer : public node {
       CNN_UNREFERENCED_PARAMETER(in_size);
 
       // checking if training data is consistent with layer shape
-      assert(data->size() == in_size);
-      dst_data[0] = (*data);
+      assert(len==in_size);
+      for( int i=0 ; i<len ; i++ )
+      {
+          dst_data[0][i] = data[i];
+      }
   }
 
   void output(std::vector<const tensor_t *> &out) const {
