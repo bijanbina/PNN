@@ -17,3 +17,9 @@ All copyright belongs to the tiny-dnn authors. Please checkout their [Licence](h
 [OpenFST Official Website](https://www.openfst.org/twiki/bin/view/FST/WebHome)
 
 All copyright belongs to the OpenFST authors. Please checkout their [Licence](https://www.openfst.org/twiki/bin/view/FST/DistCopying) file for more information.
+
+### 3. PortAudio
+
+[PortAudio Official Website](http://www.portaudio.com/)
+
+All copyright belongs to the PortAudio authors. Please checkout their [Licence](http://www.portaudio.com/license.html) file for more information.
