@@ -1,0 +1,12 @@
+
+*.stash
+
+mfst/Makefile
+
+*.Debug
+
+*.Release
+
+mfst/MFST.pro.user
+
+mfst/release/
