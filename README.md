@@ -23,3 +23,9 @@ All copyright belongs to the OpenFST authors. Please checkout their [Licence](ht
 [PortAudio Official Website](http://www.portaudio.com/)
 
 All copyright belongs to the PortAudio authors. Please checkout their [Licence](http://www.portaudio.com/license.html) file for more information.
+
+### 4. Lua
+
+[Lua Official Website](https://www.lua.org/)
+
+All copyright belongs to the Lua authors. Please checkout their [Licence](https://www.lua.org/license.html) file for more information.
