@@ -19,6 +19,7 @@ void aj_dllGen()
     if( dll_files.size()>0 )
     {
         // DLLs are already generated
+        QDir::setCurrent(curr_path);
         return;
     }
 
@@ -32,7 +33,6 @@ void aj_dllGen()
     }
     aj_fillBatFile(bat_file);
     bat_file->close();
-//    qDebug() << "ending" << project_path;
     QDir::setCurrent(curr_path);
 }
 
