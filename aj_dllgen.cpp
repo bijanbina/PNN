@@ -3,11 +3,17 @@
 #include <shobjidl.h>
 #include <shlguid.h>
 #include <QFileInfo>
+#include <QCoreApplication>
 
 void aj_dllGen()
 {
-    QString project_path = QDir::currentPath();
+    CoInitialize(NULL);
+
+    QString curr_path = QDir::currentPath();
+    QString project_path = QCoreApplication::applicationDirPath();
+    QDir::setCurrent(project_path);
     project_path.replace("/", "\\");
+
     QDir directory(project_path);
     QStringList dll_files = directory.entryList(QStringList() << "*.dll", QDir::Files);
     if( dll_files.size()>0 )
@@ -27,6 +33,7 @@ void aj_dllGen()
     aj_fillBatFile(bat_file);
     bat_file->close();
 //    qDebug() << "ending" << project_path;
+    QDir::setCurrent(curr_path);
 }
 
 void aj_fillBatFile(QFile *bat_file)
