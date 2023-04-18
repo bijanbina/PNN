@@ -416,41 +416,37 @@ HRESULT dl_resolveIt(LPCSTR lnk_path, char *target)
 
 QString dl_findAppPath(QString path, QString pattern)
 {
-    QDir directory(path);
-    directory.setFilter(QDir::Files | QDir::NoDot | QDir::NoDotDot);
     QRegExp pattern_reg("^" + pattern.toLower());
     QRegExp lnk_reg(".lnk$");
 
-    if( directory.exists() )
-    {
-        QFileInfoList file_list = directory.entryInfoList();
+    QDir path_dir(path);
+    path_dir.setFilter(QDir::Files | QDir::NoDot | QDir::NoDotDot);
+    QFileInfoList file_list = path_dir.entryInfoList();
 
-        for( int i=0 ; i<file_list.size() ; i++ )
+    for( int i=0 ; i<file_list.size() ; i++ )
+    {
+        if( file_list[i].fileName().toLower().contains(pattern_reg) &&
+            file_list[i].fileName().contains(lnk_reg))
         {
-            if( file_list[i].fileName().toLower().contains(pattern_reg) &&
-                file_list[i].fileName().contains(lnk_reg))
+            return file_list[i].absoluteFilePath().replace("/", "\\");
+        }
+    }
+    path_dir.setFilter(QDir::Dirs | QDir::NoSymLinks |
+                        QDir::NoDot | QDir::NoDotDot);
+
+    QFileInfoList dir_list = path_dir.entryInfoList();
+
+    for( int i=0 ; i<dir_list.size() ; i++ )
+    {
+        if( dir_list[i].fileName().toLower().contains(pattern_reg) )
+        {
+            QString next_path = dir_list[i].absoluteFilePath().replace("/", "\\");
+            QString ret = dl_findAppPath(next_path, pattern);
+            if( ret.length() )
             {
-                return file_list[i].absoluteFilePath().replace("/", "\\");
+                return ret;
             }
         }
-        directory.setFilter(QDir::Dirs | QDir::NoSymLinks |
-                            QDir::NoDot | QDir::NoDotDot);
-
-        QFileInfoList dir_list = directory.entryInfoList();
-
-        for( int i=0 ; i<dir_list.size() ; i++ )
-        {
-            if( dir_list[i].fileName().toLower().contains(pattern_reg) )
-            {
-                return dl_findAppPath(dir_list[i].absoluteFilePath()
-                                   .replace("/", "\\"),  pattern);
-            }
-        }
-        return "";
     }
-    else
-    {
-        qDebug() << "Error: Directory doesnt exist.";
-        return "";
-    }
+    return "";
 }
