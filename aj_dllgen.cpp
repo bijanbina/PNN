@@ -48,11 +48,27 @@ void aj_fillBatFile(QFile *bat_file)
     bat_file->write("\nwindeployqt ");
     QString bin_path = QDir::currentPath();
     bin_path.replace("/", "\\");
+    QStringList bin_split = bin_path.split(QDir::separator(),
+                                           QString::SkipEmptyParts);
+    bin_split.removeLast();
+    QString project_path = bin_split.join(QDir::separator());
+    if( aj_qmlExist(project_path) )
+    {
+        bat_file->write("--qmldir ");
+        bat_file->write((project_path + "\\Qml ").toStdString().c_str());
+    }
+
 //    bat_file->write(project_path.toStdString().c_str());
 //    bat_file->write("\\Sources ");
     bat_file->write(bin_path.toStdString().c_str());
+    aj_addCopyDllCmds(bat_file, project_path);
+}
 
+void aj_addCopyDllCmds(QFile *bat_file,
+                       QString project_path)
+{
     QString tools_path = aj_makeToolsPath();
+    QString bin_path = QDir::currentPath().replace("/", "\\");
     if( tools_path.isEmpty() )
     {
         qDebug() << "Error: Cannot retreive "
@@ -67,6 +83,26 @@ void aj_fillBatFile(QFile *bat_file)
         bat_file->write("\ncopy \"");
         bat_file->write(tools_path.toStdString().c_str());
         bat_file->write(libs[i].toStdString().c_str());
+        bat_file->write("\" ");
+        bat_file->write(bin_path.toStdString().c_str());
+    }
+    aj_addLuaDll(bat_file, project_path);
+    bat_file->write("\npause");
+}
+
+void aj_addLuaDll(QFile *bat_file, QString project_path)
+{
+    QStringList proj_split = project_path.split(QDir::separator(),
+                                                QString::SkipEmptyParts);
+    proj_split.removeLast();
+    QString lua_path = proj_split.join(QDir::separator());
+    lua_path += "\\PNN\\lua\\lua54.dll";
+    QFileInfo lua_dll(lua_path);
+    QString bin_path = QDir::currentPath().replace("/", "\\");
+    if( lua_dll.exists() )
+    {
+        bat_file->write("\ncopy \"");
+        bat_file->write(lua_path.toStdString().c_str());
         bat_file->write("\" ");
         bat_file->write(bin_path.toStdString().c_str());
     }
@@ -310,6 +346,23 @@ QFileInfoList aj_searchDir(QString path, QString pattern,
     return ret;
 }
 
+int aj_qmlExist(QString path)
+{
+    QDir project_dir(path);
+    project_dir.setFilter(QDir::Dirs | QDir::NoSymLinks |
+                       QDir::NoDot | QDir::NoDotDot);
+    QFileInfoList dir_list = project_dir.entryInfoList();
+    int len = dir_list.length();
+
+    for( int i=0 ; i<len ; i++ )
+    {
+        if( dir_list[i].fileName().contains("Qml") )
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 //these functions duplicated to maintain single header/cpp for dll gen
 //main implementation exist in aj_application
