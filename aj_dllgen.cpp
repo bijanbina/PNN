@@ -106,6 +106,7 @@ void aj_addLuaDll(QFile *bat_file, QString project_path)
         bat_file->write("\" ");
         bat_file->write(bin_path.toStdString().c_str());
     }
+
 }
 
 QString aj_getQtCompiler()
@@ -123,7 +124,7 @@ QString aj_getQtCompiler()
         return "";
     }
     // C:\Qt\Qt5.7.0\5.7.0
-    qt_compiler += "\\" + qt_dir;
+    qt_compiler += QDir::separator() + qt_dir;
     // mingw53_32
     QString compiler = aj_findCompiler("mingw", qt_compiler);
     if( compiler.isEmpty() )
@@ -131,7 +132,7 @@ QString aj_getQtCompiler()
         return "";
     }
     // C:\Qt\Qt5.7.0\5.7.0\mingw53_32\bin
-    qt_compiler += "\\" + compiler + "\\bin";
+    qt_compiler += QDir::separator() + compiler + QDir::separator() + "bin";
     return qt_compiler;
 }
 
@@ -143,13 +144,13 @@ QString aj_makeToolsPath()
         return "";
     }
     // D:\Qt\Qt5.13.1\Tools\QtCreator\bin\qtcreator.exe
-    int index = creator_path.lastIndexOf("\\");
+    int index = creator_path.lastIndexOf(QDir::separator());
     QString lib_path = creator_path.mid(0, index);
     // D:\Qt\Qt5.13.1\Tools\QtCreator\bin
-    index = lib_path.lastIndexOf("\\");
+    index = lib_path.lastIndexOf(QDir::separator());
     lib_path = lib_path.mid(0, index);
     // D:\Qt\Qt5.13.1\Tools\QtCreator
-    index = lib_path.lastIndexOf("\\");
+    index = lib_path.lastIndexOf(QDir::separator());
     lib_path = lib_path.mid(0, index);
     // D:\Qt\Qt5.13.1\Tools
     QString compiler = aj_findCompiler("mingw", lib_path);
@@ -157,7 +158,8 @@ QString aj_makeToolsPath()
     {
         return "";
     }
-    lib_path += "\\" + compiler + "\\bin\\";
+    lib_path += QDir::separator() + compiler +
+            QDir::separator() + "bin" + QDir::separator();
     return lib_path;
 }
 
@@ -170,16 +172,16 @@ QString aj_getQtPath()
     }
     // 3-level parent dir
     // D:\Qt\Qt5.13.1\Tools\QtCreator\bin\qtcreator.exe
-    int index = creator_path.lastIndexOf("\\");
+    int index = creator_path.lastIndexOf(QDir::separator());
     QString qt_path = creator_path.mid(0, index);
     // D:\Qt\Qt5.13.1\Tools\QtCreator\bin
-    index = qt_path.lastIndexOf("\\");
+    index = qt_path.lastIndexOf(QDir::separator());
     qt_path = qt_path.mid(0, index);
     // D:\Qt\Qt5.13.1\Tools\QtCreator
-    index = qt_path.lastIndexOf("\\");
+    index = qt_path.lastIndexOf(QDir::separator());
     qt_path = qt_path.mid(0, index);
     // D:\Qt\Qt5.13.1\Tools
-    index = qt_path.lastIndexOf("\\");
+    index = qt_path.lastIndexOf(QDir::separator());
     qt_path = qt_path.mid(0, index);
     // D:\Qt\Qt5.13.1
 
@@ -273,14 +275,14 @@ QString aj_findQtShortcut(QString dirname)
     {
         if( dir_list[i].fileName().contains(Qt_reg) )
         {
-            QDir qt_dir(dirname + "\\" + dir_list[i].fileName());
+            QDir qt_dir(dirname + QDir::separator() + dir_list[i].fileName());
             QRegExp creator_reg("^Qt Creator");
             QFileInfoList qt_dir_list = qt_dir.entryInfoList();
             for( int j=0 ; j<qt_dir_list.size() ; j++ )
             {
                 if( qt_dir_list[j].fileName().contains(creator_reg) )
                 {
-                    QString ret = dir_list[i].fileName() + "\\" +
+                    QString ret = dir_list[i].fileName() + QDir::separator() +
                                   qt_dir_list[j].completeBaseName();
                     return ret;
                 }
