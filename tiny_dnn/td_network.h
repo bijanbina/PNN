@@ -18,21 +18,6 @@
 #include "tiny_dnn/layers/layer.h"
 #include "tiny_dnn/util/util.h"
 
-namespace cereal
-{
-template <typename Archive>
-void load(Archive &ar, std::vector<std::shared_ptr<tiny_dnn::layer>> &v)
-{
-    cereal::size_type size;
-    ar(cereal::make_size_tag(size));
-
-    for (size_t i = 0; i < size; i++)
-    {
-        v.emplace_back(tiny_dnn::layer::load_layer(ar));
-    }
-}  // namespace cereal
-}
-
 class TdNetwork
 {
 public:

@@ -34,8 +34,26 @@
 #include "tiny_dnn/util/weight_init.h"
 #include "tiny_dnn/util/nms.h"
 
+#include "tiny_dnn/io/display.h"
+
 #include "tiny_dnn/util/deserialization_helper.h"
 #include "tiny_dnn/util/serialization_helper.h"
 // to allow upcasting
 CEREAL_REGISTER_TYPE(tiny_dnn::leaky_relu_layer)
 CEREAL_REGISTER_TYPE(tiny_dnn::softmax_layer)
+namespace tiny_dnn
+{
+    namespace activation
+    {
+        using softmax = tiny_dnn::softmax_layer;
+        using leaky_relu = tiny_dnn::leaky_relu_layer;
+    }  // namespace activation
+
+    namespace layers
+    {
+        using conv = tiny_dnn::convolutional_layer;
+        using ave_pool = tiny_dnn::average_pooling_layer;
+        using fc = tiny_dnn::fully_connected_layer;
+        using dense = tiny_dnn::fully_connected_layer;
+    }  // namespace layers
+}  // namespace tiny_dnn
