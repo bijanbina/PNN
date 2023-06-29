@@ -779,7 +779,8 @@ public:
              OnEpochEnumerate on_epoch_enumerate,
              const bool reset_weights            = false,
              const int n_threads                 = CNN_TASK_SIZE,
-             const std::vector<tensor_t> &t_cost = std::vector<tensor_t>()) {
+             const std::vector<tensor_t> &t_cost = std::vector<tensor_t>())
+    {
         // check_training_data(in, t);
         check_target_cost_matrix(desired_outputs, t_cost);
         set_netphase(net_phase::train);

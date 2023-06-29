@@ -65,9 +65,11 @@ inline void tiny_average_pooling_back_kernel(
   float_t scale_factor,
   std::vector<typename partial_connected_layer::io_connections> &weight2io,
   std::vector<typename partial_connected_layer::wo_connections> &in2wo,
-  std::vector<std::vector<size_t>> &bias2out) {
+  std::vector<std::vector<size_t>> &bias2out)
+{
   CNN_UNREFERENCED_PARAMETER(out_data);
-  for_i(parallelize, in_data[0]->size(), [&](size_t sample) {
+  for_i(parallelize, in_data[0]->size(), [&](size_t sample)
+  {
     const vec_t &prev_out = (*in_data[0])[sample];
     const vec_t &W        = (*in_data[1])[0];
     vec_t &dW             = (*in_grad[1])[sample];
@@ -77,14 +79,17 @@ inline void tiny_average_pooling_back_kernel(
 
     auto inarea = in_dim.area();
     size_t idx  = 0;
-    for (size_t i = 0; i < in_dim.depth_; ++i) {
+    for (size_t i = 0; i < in_dim.depth_; ++i)
+    {
       float_t weight = W[i] * scale_factor;
-      for (size_t j = 0; j < inarea; ++j, ++idx) {
+      for (size_t j = 0; j < inarea; ++j, ++idx)
+      {
         prev_delta[idx] = weight * curr_delta[in2wo[idx][0].second];
       }
     }
 
-    for (size_t i = 0; i < weight2io.size(); ++i) {
+    for (size_t i = 0; i < weight2io.size(); ++i)
+    {
       const auto &connections = weight2io[i];
       float_t diff{0};
 
@@ -95,6 +100,9 @@ inline void tiny_average_pooling_back_kernel(
     }
 
     for (size_t i = 0; i < bias2out.size(); i++) {
+
+    for (size_t i = 0; i < bias2out.size(); i++)
+    {
       const std::vector<size_t> &outs = bias2out[i];
       float_t diff{0};
 
@@ -237,7 +245,8 @@ class average_pooling_layer : public partial_connected_layer {
   void back_propagation(const std::vector<tensor_t *> &in_data,
                         const std::vector<tensor_t *> &out_data,
                         std::vector<tensor_t *> &out_grad,
-                        std::vector<tensor_t *> &in_grad) override {
+                        std::vector<tensor_t *> &in_grad) override
+  {
     tiny_average_pooling_back_kernel(
       parallelize_, in_data, out_data, out_grad, in_grad, in_,
       Base::scale_factor_, Base::weight2io_, Base::in2wo_, Base::bias2out_);

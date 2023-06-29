@@ -525,19 +525,22 @@ class layer : public node {
     forward_propagation(fwd_in_data_, fwd_out_data_);
   }
 
-  void backward() {
+  void backward()
+  {
     bwd_in_data_.resize(in_channels_);
     bwd_in_grad_.resize(in_channels_);
     bwd_out_data_.resize(out_channels_);
     bwd_out_grad_.resize(out_channels_);
 
     // organize input/output vectors from storage
-    for (size_t i = 0; i < in_channels_; i++) {
+    for( size_t i = 0; i < in_channels_; i++ )
+    {
       const auto &nd  = ith_in_node(i);
       bwd_in_data_[i] = nd->get_data();
       bwd_in_grad_[i] = nd->get_gradient();
     }
-    for (size_t i = 0; i < out_channels_; i++) {
+    for( size_t i = 0; i < out_channels_; i++ )
+    {
       const auto &nd   = ith_out_node(i);
       bwd_out_data_[i] = nd->get_data();
       bwd_out_grad_[i] = nd->get_gradient();

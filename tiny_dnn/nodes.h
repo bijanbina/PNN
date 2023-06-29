@@ -262,17 +262,21 @@ class nodes {
 /**
  * single-input, single-output feedforward network
  **/
-class sequential : public nodes {
+class sequential : public nodes
+{
  public:
-  void backward(const std::vector<tensor_t> &first) override {
+  void backward(const std::vector<tensor_t> &first) override
+  {
     std::vector<std::vector<const vec_t *>> reordered_grad;
     reorder_for_layerwise_processing(first, reordered_grad);
     assert(reordered_grad.size() == 1);
 
     nodes_.back()->set_out_grads(&reordered_grad[0], 1);
 
-    for (auto l = nodes_.rbegin(); l != nodes_.rend(); l++) {
-      (*l)->backward();
+    int len = nodes_.size();
+    for( int i=0 ; i<len ; i++ )
+    {
+        nodes_[i]->backward();
     }
   }
 

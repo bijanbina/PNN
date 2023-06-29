@@ -80,7 +80,8 @@ class fully_connected_layer : public layer {
   void back_propagation(const std::vector<tensor_t *> &in_data,
                         const std::vector<tensor_t *> &out_data,
                         std::vector<tensor_t *> &out_grad,
-                        std::vector<tensor_t *> &in_grad) override {
+                        std::vector<tensor_t *> &in_grad) override
+  {
     // backward fully connected op context
     bwd_ctx_.set_in_out(in_data, out_data, out_grad, in_grad);
     bwd_ctx_.setParallelize(layer::parallelize());
