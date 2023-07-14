@@ -10,3 +10,9 @@ mfst/Makefile
 mfst/MFST.pro.user
 
 mfst/release/
+
+sag/debug/
+
+sag/Makefile
+
+sag/Sag.pro.user
