@@ -3,20 +3,25 @@
 #include <QString>
 #include <iostream>
 #include <QFileInfo>
+#include <QTextStream>
 #include "mm_win32.h"
 #include "mm_api.h"
 
+static HHOOK hook_msg;
 static HHOOK hook_win;
 HMODULE dll_handle = NULL;
+QTextStream out;
 
-void showMessage(const WCHAR *txt);
+void  setupHook(HMODULE dll_h);
+void  showMessage(const WCHAR *txt);
 DWORD mainThread(HMODULE mod_h);
 MmApplication sag_getApp(QString shortcut_name);
 
-LRESULT CALLBACK CallWndProcHook(int nCode, WPARAM wParam,
+LRESULT CALLBACK msgCallback(int nCode, WPARAM wParam,
                                  LPARAM lParam)
 {
     printf("kuta\n");
+    out << "My Text\n";
     CWPSTRUCT* cwpStruct = reinterpret_cast<CWPSTRUCT*>(lParam);
     if( nCode>=0 )
     {
@@ -26,10 +31,19 @@ LRESULT CALLBACK CallWndProcHook(int nCode, WPARAM wParam,
                hWnd, cwpStruct->message);
     }
     // Call the next hook in the chain
+    return CallNextHookEx(hook_msg, nCode, wParam, lParam);
+}
+
+LRESULT CALLBACK winCallback(int nCode, WPARAM wParam,
+                                 LPARAM lParam)
+{
+    printf("kuta\n");
+    out << "My Text\n";
+    // Call the next hook in the chain
     return CallNextHookEx(hook_win, nCode, wParam, lParam);
 }
 
-BOOL APIENTRY DllMain (HINSTANCE hndl, DWORD reason,
+BOOL APIENTRY DllMain(HINSTANCE hndl, DWORD reason,
                        LPVOID reserved)
 {
     (void) reserved; // to avoid not used warning
@@ -62,53 +76,82 @@ BOOL APIENTRY DllMain (HINSTANCE hndl, DWORD reason,
     return TRUE;
 }
 
-DWORD mainThread(HMODULE mod_h)
+DWORD mainThread(HMODULE dll_h)
 {
     AllocConsole();
+    QFile log_f("C:/Home/Projects/test.log");
+    int s = log_f.open(QIODevice::WriteOnly |
+                       QIODevice::Text);
+    printf("file = %d\n", s);
+    out.setDevice(&log_f);
     FILE *f = new FILE();
     freopen_s(&f, "CONOUT$", "w", stdout);
 
+    setupHook(dll_h);
+//    int loop_active = 1;
+//    while( loop_active )
+//    {
+//        if( GetAsyncKeyState(VK_DELETE) & 0x80000 )
+//        {
+//            loop_active = 0;
+//            break;
+//        }
+//        if( GetAsyncKeyState(VK_F7) & 0x80000 )
+//        {
+//            setupHook(dll_h);
+//        }
 
-    // Set the hook
-//    HWND  hwnd = GetForegroundWindow();
-    MmApplication app = sag_getApp("Altium");
-    DWORD tid  = GetWindowThreadProcessId(app.hwnd, NULL);
-//    DWORD tid  = 14880;
+//        //sleep in ms
+//        Sleep(20);
+//    }
 
-    if( tid )
+
+    MSG msg;
+    while( GetMessage(&msg, nullptr, 0, 0) )
     {
-        // Set the hook
-        hook_win = SetWindowsHookExA(WH_GETMESSAGE, CallWndProcHook,
-                                     mod_h, tid);
-
-        if( hook_win==NULL )
-        {
-            printf("Failed to set the hook. Error code: %d\n",
-                   GetLastError());
-            return NULL;
-        }
-        printf("SetWindowHookEx were successful\n");
-    }
-    printf("mod_h:%x tid: %d hook:%x\n", mod_h, tid,
-                                         hook_win);
-
-    int loop_active = 1;
-    while( loop_active )
-    {
-        if( GetAsyncKeyState(VK_DELETE) & 0x80000 )
-        {
-            loop_active = 0;
-            break;
-        }
-
-        //sleep in ms
-        Sleep(20);
+        DispatchMessage(&msg);
     }
 
     printf("Free and Exit\n");
-    FreeLibraryAndExitThread(dll_handle, true);
 
+    log_f.close();
+    FreeLibraryAndExitThread(dll_handle, true);
     return 0;
+}
+
+void setupHook(HMODULE dll_h)
+{
+//    HWND  hwnd = GetForegroundWindow();
+    MmApplication app = sag_getApp("notepad");
+    DWORD tid  = GetWindowThreadProcessId(app.hwnd, NULL);
+    printf(">>>> %d | 0x%x | %s\n", app.pid,
+           app.hwnd, app.pname.toStdString().c_str());
+//    DWORD tid  = 14880;
+
+    if( tid==0 )
+    {
+        return;
+    }
+    hook_msg = SetWindowsHookExA(WH_GETMESSAGE, msgCallback,
+                                 dll_h, tid);
+    if( hook_msg==NULL )
+    {
+        printf("Failed to set the Msg hook. Error code: %d\n",
+               GetLastError());
+        return;
+    }
+
+    hook_win = SetWindowsHookEx(WH_CALLWNDPROC, winCallback,
+                                dll_h, tid);
+    if( hook_win==NULL )
+    {
+        printf("Failed to set the Win hook. Error code: %d\n",
+               GetLastError());
+        return;
+    }
+    printf("All hook were successful\n");
+    printf("mod_h:%x tid: %d hook:%x\n", dll_h, tid,
+                                         hook_msg);
 }
 
 void showMessage(const WCHAR *txt)
@@ -117,14 +160,10 @@ void showMessage(const WCHAR *txt)
                MB_ICONINFORMATION);
 }
 
-MmApplication sag_getApp(QString shortcut_name)
+MmApplication sag_getApp(QString app_name)
 {
     MmApplication app;
-    app.shortcut_name = shortcut_name;
-    shortcut_name += ".lnk";
-    mm_getLinkPath(shortcut_name, &app);
-    QFileInfo fi(app.exe_path);
-    app.exe_name = fi.completeBaseName();
+    app.exe_name = app_name;
     app.hwnd = mm_getHWND(&app);
     return app;
 }

@@ -29,14 +29,14 @@ BOOL CALLBACK EnumWindowsApp(HWND hwnd, LPARAM lParam)
     pname = QFileInfo(pname).completeBaseName();
     if( pname==app->exe_name )
     {
-        qDebug() << "EnumWindowsProc find HWND"
+        qDebug() << "EnumWindowsProc find 2HWND"
                  << pname << app->exe_name << hwnd
                  << win_title;
 
         if( win_title.contains(app->win_title) )
         {
             hwnd_g = hwnd;
-            return FALSE;
+//            return FALSE;
         }
     }
 
