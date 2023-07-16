@@ -2,12 +2,16 @@
 #include <stdio.h>
 #include <QString>
 #include <iostream>
+#include <QFileInfo>
+#include "mm_win32.h"
+#include "mm_api.h"
 
 static HHOOK hook_win;
 HMODULE dll_handle = NULL;
 
 void showMessage(const WCHAR *txt);
 DWORD mainThread(HMODULE mod_h);
+MmApplication sag_getApp(QString shortcut_name);
 
 LRESULT CALLBACK CallWndProcHook(int nCode, WPARAM wParam,
                                  LPARAM lParam)
@@ -67,9 +71,9 @@ DWORD mainThread(HMODULE mod_h)
 
     // Set the hook
 //    HWND  hwnd = GetForegroundWindow();
-//    DWORD tid  = GetWindowThreadProcessId(hwnd, NULL);
-    DWORD tid  = 14880;
-
+    MmApplication app = sag_getApp("Altium");
+    DWORD tid  = GetWindowThreadProcessId(app.hwnd, NULL);
+//    DWORD tid  = 14880;
 
     if( tid )
     {
@@ -111,4 +115,16 @@ void showMessage(const WCHAR *txt)
 {
     MessageBox(0, txt, L"DLL",
                MB_ICONINFORMATION);
+}
+
+MmApplication sag_getApp(QString shortcut_name)
+{
+    MmApplication app;
+    app.shortcut_name = shortcut_name;
+    shortcut_name += ".lnk";
+    mm_getLinkPath(shortcut_name, &app);
+    QFileInfo fi(app.exe_path);
+    app.exe_name = fi.completeBaseName();
+    app.hwnd = mm_getHWND(&app);
+    return app;
 }
