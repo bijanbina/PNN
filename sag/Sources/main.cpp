@@ -3,21 +3,27 @@
 #include <QString>
 #include <iostream>
 
-static LRESULT CALLBACK lowLevelKeyboardProc(int, WPARAM, LPARAM);
-
-// Max number of hotkeys
-#define MAX_HOTKEYS 5
-
-// Max time interval between first and second part of hotkey (ms)
-#define MAX_KEYS_TIME_INTERVAL 500
-
-static HINSTANCE hInstance;
-static HWND hGDWindow;
-static HHOOK hKbdHook;
-HMODULE handle;
+static HHOOK hook_win;
+HMODULE dll_handle = NULL;
 
 void showMessage(const WCHAR *txt);
 DWORD mainThread(HMODULE mod_h);
+
+LRESULT CALLBACK CallWndProcHook(int nCode, WPARAM wParam,
+                                 LPARAM lParam)
+{
+    printf("kuta\n");
+    CWPSTRUCT* cwpStruct = reinterpret_cast<CWPSTRUCT*>(lParam);
+    if( nCode>=0 )
+    {
+        // Process the window messages here
+        HWND hWnd = cwpStruct->hwnd;
+        printf("Window is being closed. Handle: %x | %x\n",
+               hWnd, cwpStruct->message);
+    }
+    // Call the next hook in the chain
+    return CallNextHookEx(hook_win, nCode, wParam, lParam);
+}
 
 BOOL APIENTRY DllMain (HINSTANCE hndl, DWORD reason,
                        LPVOID reserved)
@@ -26,28 +32,23 @@ BOOL APIENTRY DllMain (HINSTANCE hndl, DWORD reason,
 
     if( reason==DLL_PROCESS_ATTACH )
     {
-        hInstance = hndl;
-//        MessageBox(0, L"Hell!", L"Hello", MB_ICONINFORMATION);
-        showMessage(L"KOKKO");
+        dll_handle = hndl;
         LPTHREAD_START_ROUTINE main_th =
                 (LPTHREAD_START_ROUTINE)mainThread;
-        HANDLE th = CreateThread(NULL, 0, main_th, hndl, 0, NULL);
-//        CloseHandle(th);
+        CreateThread(NULL, 0, main_th, hndl, 0, NULL);
     }
     else if( reason==DLL_PROCESS_DETACH )
     {
-        MessageBox(0, L"Detach Lib!", L"Hello", MB_ICONINFORMATION);
+//        MessageBox(0, L"Detach Lib!", L"Hello", MB_ICONINFORMATION);
         ;// Run deconstructor here
     }
     else if( reason==DLL_THREAD_ATTACH )
     {
-        MessageBox(0, L"Attach !", L"Hello", MB_ICONINFORMATION);
+//        MessageBox(0, L"Attach !", L"Hello", MB_ICONINFORMATION);
     }
     else if( reason==DLL_THREAD_DETACH )
     {
-        MessageBox(0, L"Detach Thread!", L"Hello", MB_ICONINFORMATION);
-        handle = GetModuleHandle(L"Sag.dll");
-        FreeLibrary(handle);
+//        MessageBox(0, L"Detach Thread!", L"Hello", MB_ICONINFORMATION);
     }
     else
     {
@@ -59,14 +60,50 @@ BOOL APIENTRY DllMain (HINSTANCE hndl, DWORD reason,
 
 DWORD mainThread(HMODULE mod_h)
 {
-    (void) mod_h;
-//    AllocConsole();
-//    FILE *f = new FILE();
-//    freopen_s(&f, "CONOUT$", "w", stdout);
+    AllocConsole();
+    FILE *f = new FILE();
+    freopen_s(&f, "CONOUT$", "w", stdout);
 
-//    std::cout << "sag tu in zendegi" << std::endl;
 
-//    std::cout << "sag tu in zendegi" << handle << std::endl;
+    // Set the hook
+//    HWND  hwnd = GetForegroundWindow();
+//    DWORD tid  = GetWindowThreadProcessId(hwnd, NULL);
+    DWORD tid  = 14880;
+
+
+    if( tid )
+    {
+        // Set the hook
+        hook_win = SetWindowsHookExA(WH_GETMESSAGE, CallWndProcHook,
+                                     mod_h, tid);
+
+        if( hook_win==NULL )
+        {
+            printf("Failed to set the hook. Error code: %d\n",
+                   GetLastError());
+            return NULL;
+        }
+        printf("SetWindowHookEx were successful\n");
+    }
+    printf("mod_h:%x tid: %d hook:%x\n", mod_h, tid,
+                                         hook_win);
+
+    int loop_active = 1;
+    while( loop_active )
+    {
+        if( GetAsyncKeyState(VK_DELETE) & 0x80000 )
+        {
+            loop_active = 0;
+            break;
+        }
+
+        //sleep in ms
+        Sleep(20);
+    }
+
+    printf("Free and Exit\n");
+    FreeLibraryAndExitThread(dll_handle, true);
+
     return 0;
 }
 
