@@ -1,14 +1,17 @@
-#ifndef __HOTKEYS_H_INCLUDED__
-#define __HOTKEYS_H_INCLUDED__
+#ifndef SAG_HOOK_H
+#define SAG_HOOK_H
 
 #include <windows.h>
+#include <stdio.h>
+#include <iostream>
+#include <TlHelp32.h>
+#include <Psapi.h>
 
-// Message if hotkey completed; WPARAM - hotkey number
-#define GD_HOTKEY_MESSAGE ( WM_APP + 1 )
+__declspec(dllexport) void WINAPI setupHook(HWND caller,
+                                            UINT umsg);
+void  writeMessage(const char *msg);
+void  showMessage (const WCHAR *txt);
+void  initLog();
+DWORD findNotepadTid();
 
-typedef BOOL ( *setHookProc )( HWND hwnd );
-typedef void ( *removeHookProc )();
-typedef BOOL ( *setHotkeysProc )( DWORD, DWORD, DWORD, int );
-typedef void ( *clearHotkeysProc )();
-
-#endif // __HOTKEYS_H_INCLUDED__
+#endif //SAG_HOOK_H
