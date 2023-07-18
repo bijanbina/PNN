@@ -1,18 +1,18 @@
 #include "hook.h"
 
 static HHOOK hook_msg;
-static HHOOK hook_win;
 HMODULE dll_handle = NULL;
+int msg_counter = 0;
 
 #define CALL_NEXT CallNextHookEx(hook_msg, nCode, wParam, lParam)
 
 LRESULT CALLBACK msgCallback(int nCode, WPARAM wParam,
                                  LPARAM lParam)
 {
-    PMSG pMsg = (PMSG)lParam;		// WH_CALLWNDPROC
+    PMSG pMsg = (PMSG)lParam;
     char buffer[250] = {0};
     if( pMsg->message==WM_MOUSEMOVE ||
-        pMsg->message==0x118 ||
+        pMsg->message==WM_SYSTIMER ||
         pMsg->message==WM_TIMER ||
         pMsg->message==WM_SCRN_DRAW ||
         pMsg->message==WM_QUIT ||
@@ -29,38 +29,30 @@ LRESULT CALLBACK msgCallback(int nCode, WPARAM wParam,
         return CALL_NEXT;
     }
     const char *msg = msgToStr(pMsg->message);
-    sprintf_s(buffer,
-              "%08X %s, w: %08X, l: %08X\n",
-              pMsg->hwnd, msg, (int)pMsg->wParam,
-              (int)pMsg->lParam);
+    msg_counter++;
 
-//    HWND hwnd = pMsg->hwnd;
-//    char win_title[256];
-//    GetWindowTextA(hwnd, win_title, 256);
-//    printf("msgCallback: %x | %x %s\n", hwnd,
-//           cwpStruct->message, win_title);
+    HWND hwnd = pMsg->hwnd;
+    char win_title[256];
+    GetWindowTextA(hwnd, win_title, 256);
+
+    if( strlen(win_title) )
+    {
+        sprintf_s(buffer,
+                  "%05d %08X %s, data:%08X, pt:%08X title:%.12s\n",
+                  msg_counter, pMsg->hwnd, msg,
+                  (int)pMsg->wParam, (int)pMsg->lParam,
+                  win_title);
+    }
+    else
+    {
+        sprintf_s(buffer,
+                  "%05d %08X %s, data:%08X, pt:%08X\n",
+                  msg_counter, pMsg->hwnd, msg,
+                  (int)pMsg->wParam, (int)pMsg->lParam);
+    }
     writeMessage(buffer);
 
     return CALL_NEXT;
-}
-
-LRESULT CALLBACK winCallback(int nCode, WPARAM wParam,
-                                 LPARAM lParam)
-{
-    CWPSTRUCT* cwpStruct = reinterpret_cast<CWPSTRUCT*>(lParam);
-//    if( nCode>=0 )
-//    {
-        // Process the window messages here
-        HWND hwnd = cwpStruct->hwnd;
-        char win_title[256];
-        GetWindowTextA(hwnd, win_title, 256);
-        printf("winCallback: %x | %x %s\n", hwnd,
-               cwpStruct->message, win_title);
-
-        writeMessage("win");
-//    }
-    // Call the next hook in the chain
-    return CallNextHookEx(hook_win, nCode, wParam, lParam);
 }
 
 BOOL APIENTRY DllMain(HINSTANCE hndl, DWORD reason,
@@ -71,6 +63,7 @@ BOOL APIENTRY DllMain(HINSTANCE hndl, DWORD reason,
     if( reason==DLL_PROCESS_ATTACH )
     {
         dll_handle = hndl;
+        initLog();
     }
     else if( reason==DLL_PROCESS_DETACH )
     {
@@ -98,22 +91,11 @@ void initLog()
     AllocConsole();
     FILE *f = new FILE();
     freopen_s(&f, "CONOUT$", "w", stdout);
-
-    printf("Log is initialized\n");
-    writeMessage("log");
 }
 
-void WINAPI setupHook(HWND caller, UINT umsg)
+void WINAPI setupHook(DWORD tid)
 {
-//    umsg_h = umsg;
-//    caller_h = caller;
-    initLog();
-//    HWND  hwnd = GetForegroundWindow();
-    DWORD tid  = findNotepadTid();
-
-    printf(">>>> tid=%d\n", tid);
-//    DWORD tid  = 14880;
-
+    printf(">>>> tid=%d c_tid=%x\n", tid);
     if( tid==0 )
     {
         return;
@@ -127,61 +109,20 @@ void WINAPI setupHook(HWND caller, UINT umsg)
         return;
     }
 
-//    hook_win = SetWindowsHookEx(WH_CALLWNDPROC, winCallback,
-//                                dll_handle, tid);
-//    if( hook_win==NULL )
-//    {
-//        printf("Failed to set the Win hook. Error code: %d\n",
-//               GetLastError());
-//        return;
-//    }
-//    printf("All hook were successful\n");
     printf("mod_h:%x tid: %d hook:%x\n", dll_handle, tid,
                                          hook_msg);
 }
 
-void showMessage(const WCHAR *txt)
-{
-    MessageBox(0, txt, L"DLL",
-               MB_ICONINFORMATION);
-}
-
-DWORD findNotepadTid()
-{
-    auto hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-    if (hSnapshot == INVALID_HANDLE_VALUE)
-        return 0;
-
-    DWORD tid = 0;
-    THREADENTRY32 th32;
-    th32.dwSize = sizeof(th32);
-
-    Thread32First(hSnapshot, &th32);
-    do {
-        auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, th32.th32OwnerProcessID);
-        if (hProcess) {
-            WCHAR name[MAX_PATH];
-            if( GetProcessImageFileName(hProcess, name, MAX_PATH) > 0) {
-                auto bs = ::wcsrchr(name, L'\\');
-                if (bs && ::_wcsicmp(bs, L"\\notepad.exe") == 0) {
-                    tid = th32.th32ThreadID;
-                }
-            }
-            CloseHandle(hProcess);
-        }
-    }
-    while (tid == 0 && Thread32Next(hSnapshot, &th32));
-    CloseHandle(hSnapshot);
-
-    return tid;
-}
-
 void writeMessage(const char *msg)
 {
-    FILE *pFile;
-    pFile=fopen("C:/Home/Projects/test.log", "a");
-    fprintf(pFile, "%s", msg);
-    fclose(pFile);
+    printf(msg);
+    // in case of window
+//    SendMessageA(caller_hwnd, WM_USER,
+//                 0, (LPARAM)msg);
+
+    // in case of no window
+//    PostThreadMessageA(caller_th, WM_USER,
+//                       0, (LPARAM)msg);
 }
 
 const char* msgToStr(int message)

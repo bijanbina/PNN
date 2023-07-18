@@ -4,8 +4,6 @@
 #include <windows.h>
 #include <stdio.h>
 #include <iostream>
-#include <TlHelp32.h>
-#include <Psapi.h>
 
 #define WM_SCRN_DRAW                0x000F
 #define WM_QUIT                     0x0012
@@ -15,6 +13,7 @@
 #define WM_KEYUP                    0x0101
 #define WM_CHAR                     0x0102
 #define WM_TIMER                    0x0113
+#define WM_SYSTIMER                 0x0118
 #define WM_MOUSEMOVE                0x0200
 #define WM_MOUSELEFT                0x0201
 #define WM_LBUTTONUP                0x0202
@@ -23,12 +22,10 @@
 #define WM_NCMOUSELEAVE             0x02A2
 #define WM_DWMNCRENDERINGCHANGED    0x031F
 
-__declspec(dllexport) void WINAPI setupHook(HWND caller,
-                                            UINT umsg);
+__declspec(dllexport) void WINAPI setupHook(DWORD tid);
 void  writeMessage(const char *msg);
 void  showMessage (const WCHAR *txt);
 void  initLog();
-DWORD findNotepadTid();
-const char* msgToStr(int message);
+const char *msgToStr(int message);
 
 #endif //SAG_HOOK_H
