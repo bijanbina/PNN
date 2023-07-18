@@ -4,14 +4,34 @@ static HHOOK hook_msg;
 static HHOOK hook_win;
 HMODULE dll_handle = NULL;
 
+#define CALL_NEXT CallNextHookEx(hook_msg, nCode, wParam, lParam)
+
 LRESULT CALLBACK msgCallback(int nCode, WPARAM wParam,
                                  LPARAM lParam)
 {
     PMSG pMsg = (PMSG)lParam;		// WH_CALLWNDPROC
     char buffer[250] = {0};
+    if( pMsg->message==WM_MOUSEMOVE ||
+        pMsg->message==0x118 ||
+        pMsg->message==WM_TIMER ||
+        pMsg->message==WM_SCRN_DRAW ||
+        pMsg->message==WM_QUIT ||
+        pMsg->message==WM_NCMOUSEMOVE ||
+        pMsg->message==WM_NCLBUTTONDOWN ||
+        pMsg->message==WM_KEYDOWN ||
+        pMsg->message==WM_KEYUP ||
+        pMsg->message==WM_MOUSELEFT ||
+        pMsg->message==WM_LBUTTONUP ||
+        pMsg->message==WM_RBUTTONDOWN ||
+        pMsg->message==WM_RBUTTONUP ||
+        pMsg->message==WM_NCMOUSELEAVE )
+    {
+        return CALL_NEXT;
+    }
+    const char *msg = msgToStr(pMsg->message);
     sprintf_s(buffer,
-              "%08X P Msg: %04X, wParam: %08X, lParam: %08X\n",
-              pMsg->hwnd, pMsg->message, (int)pMsg->wParam,
+              "%08X %s, w: %08X, l: %08X\n",
+              pMsg->hwnd, msg, (int)pMsg->wParam,
               (int)pMsg->lParam);
 
 //    HWND hwnd = pMsg->hwnd;
@@ -21,7 +41,7 @@ LRESULT CALLBACK msgCallback(int nCode, WPARAM wParam,
 //           cwpStruct->message, win_title);
     writeMessage(buffer);
 
-    return CallNextHookEx(hook_msg, nCode, wParam, lParam);
+    return CALL_NEXT;
 }
 
 LRESULT CALLBACK winCallback(int nCode, WPARAM wParam,
@@ -162,4 +182,30 @@ void writeMessage(const char *msg)
     pFile=fopen("C:/Home/Projects/test.log", "a");
     fprintf(pFile, "%s", msg);
     fclose(pFile);
+}
+
+const char* msgToStr(int message)
+{
+    switch( message )
+    {
+        case WM_SCRN_DRAW: return "WM_SCRN_DRAW";
+        case WM_QUIT: return "WM_QUIT";
+        case WM_NCMOUSEMOVE: return "WM_NCMOUSEMOVE";
+        case WM_NCLBUTTONDOWN: return "WM_NCLBUTTONDOWN";
+        case WM_KEYDOWN: return "WM_KEYDOWN";
+        case WM_KEYUP: return "WM_KEYUP";
+        case WM_CHAR: return "WM_CHAR";
+        case WM_TIMER: return "WM_TIMER";
+        case WM_MOUSEMOVE: return "WM_MOUSEMOVE";
+        case WM_MOUSELEFT: return "WM_MOUSELEFT";
+        case WM_LBUTTONUP: return "WM_LBUTTONUP";
+        case WM_RBUTTONDOWN: return "WM_RBUTTONDOWN";
+        case WM_RBUTTONUP: return "WM_RBUTTONUP";
+        case WM_NCMOUSELEAVE: return "WM_NCMOUSELEAVE";
+        case WM_DWMNCRENDERINGCHANGED:
+            return "WM_DWMNCRENDERINGCHANGED";
+    }
+    char *msg = (char *)malloc(20);
+    sprintf(msg, "0x%06X", message);
+    return msg;
 }
