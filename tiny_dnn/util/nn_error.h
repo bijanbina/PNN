@@ -48,7 +48,7 @@ class nn_info {
  public:
   explicit nn_info(const std::string &msg) : msg_(msg) {
 #ifdef CNN_USE_STDOUT
-    std::cout << msg_h + msg_ << std::endl;
+//    std::cout << msg_h + msg_ << std::endl;
 #endif
   }
 
