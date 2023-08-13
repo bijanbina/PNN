@@ -1,5 +1,6 @@
-
+#ifdef WIN32
 #include <windows.h>
+#endif
 #include <errno.h>
 #include <io.h>
 

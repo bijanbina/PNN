@@ -13,14 +13,16 @@ SOURCES += \
     Sources/fst-types.cc \
     Sources/fst.cc \
     Sources/mapped-file.cc \
-    Sources/mman.cc \
     Sources/properties.cc \
     Sources/symbol-table-ops.cc \
     Sources/symbol-table.cc \
     Sources/util.cc \
     Sources/weight.cc
 
-HEADERS += \
+win32:SOURCES += \
+    Sources/mman.cc
+
+win32:HEADERS += \
     Sources/mman.h
 
 # Default rules for deployment.
