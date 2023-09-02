@@ -190,31 +190,24 @@ inline void apply_cost_if_defined(std::vector<vec_t> &sample_gradient,
 template <typename E>
 std::vector<tensor_t> gradient(const std::vector<tensor_t> &y,
                                const std::vector<tensor_t> &t,
-                               const std::vector<tensor_t> &t_cost) {
-  const size_t sample_count  = y.size();
-  const size_t channel_count = y[0].size();
+                               const std::vector<tensor_t> &t_cost,
+                               int s_index, int e_index)
+{
+    const size_t sample_count  = y.size();
 
-  std::vector<tensor_t> gradients(sample_count);
+    std::vector<tensor_t> gradients(sample_count);
 
-  CNN_UNREFERENCED_PARAMETER(channel_count);
-  assert(y.size() == t.size());
-  assert(t_cost.empty() || t_cost.size() == t.size());
+    for (size_t sample=s_index; sample < e_index; ++sample)
+    {
+        gradients[sample] = gradient<E>(y[sample], t[sample]);
 
-  // @todo add parallelism
-  for (size_t sample = 0; sample < sample_count; ++sample) {
-    assert(y[sample].size() == channel_count);
-    assert(t[sample].size() == channel_count);
-    assert(t_cost.empty() || t_cost[sample].empty() ||
-           t_cost[sample].size() == channel_count);
-
-    gradients[sample] = gradient<E>(y[sample], t[sample]);
-
-    if (sample < t_cost.size()) {
-      apply_cost_if_defined(gradients[sample], t_cost[sample]);
+        if( sample<t_cost.size() )
+        {
+            apply_cost_if_defined(gradients[sample], t_cost[sample]);
+        }
     }
-  }
 
-  return gradients;
+    return gradients;
 }
 
 }  // namespace tiny_dnn
