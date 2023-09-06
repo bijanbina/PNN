@@ -8,7 +8,7 @@
 #pragma once
 
 #include <vector>
-
+#include <QDebug>
 #include "tiny_dnn/util/util.h"
 
 namespace tiny_dnn {
@@ -154,61 +154,34 @@ class cross_entropy_multiclass {
   }
 };
 
-template <typename E>
-vec_t gradient(const vec_t &y, const vec_t &t)
+inline void apply_cost_if_defined(tensor_t &gradient, const vec_t &cost)
 {
-    assert(y.size() == t.size());
-    return E::df(y, t);
-}
-
-template <typename E>
-std::vector<vec_t> gradient(const std::vector<vec_t> &y,
-                            const std::vector<vec_t> &t)
-{
-    std::vector<vec_t> grads(y.size());
-
-    assert(y.size() == t.size());
-
-    for(size_t i = 0; i < y.size(); i++)
+    int channel_count = gradient.size();
+    for( int channel=0 ; channel<channel_count ; channel++ )
     {
-        grads[i] = gradient<E>(y[i], t[i]);
-    }
-
-    return grads;
-}
-
-inline void apply_cost_if_defined(std::vector<vec_t> &sample_gradient,
-                                  const std::vector<vec_t> &sample_cost) {
-  if (sample_gradient.size() == sample_cost.size()) {
-    // @todo consider adding parallelism
-    const size_t channel_count = sample_gradient.size();
-    for (size_t channel = 0; channel < channel_count; ++channel) {
-      if (sample_gradient[channel].size() == sample_cost[channel].size()) {
-        const size_t element_count = sample_gradient[channel].size();
-
         // @todo optimize? (use AVX or so)
-        for (size_t element = 0; element < element_count; ++element) {
-          sample_gradient[channel][element] *= sample_cost[channel][element];
-        }
-      }
+        gradient[channel][0] *= cost[channel];
     }
-  }
 }
 
 // gradient for a minibatch
 template <typename E>
 std::vector<tensor_t> gradient(const std::vector<tensor_t> &y,
                                const std::vector<tensor_t> &t,
-                               const std::vector<tensor_t> &t_cost,
+                               const tensor_t &t_cost,
                                int s_index, int e_index)
 {
     const size_t sample_count  = y.size();
-
     std::vector<tensor_t> gradients(sample_count);
 
-    for (size_t sample=s_index; sample < e_index; ++sample)
+    for(int sample=s_index; sample < e_index; ++sample)
     {
-        gradients[sample] = gradient<E>(y[sample], t[sample]);
+        gradients[sample].resize(y[sample].size());
+        for(size_t i = 0; i < y[sample].size(); i++)
+        {
+            gradients[sample][i] = E::df(y[sample][i],
+                                         t[sample][i]);
+        }
 
         if( sample<t_cost.size() )
         {

@@ -173,7 +173,8 @@ bool value_representation(U const &value) {
 
 template <typename T, typename Func>
 inline void for_(
-  bool parallelize, size_t begin, T end, Func f, size_t grainsize = 100) {
+  bool parallelize, size_t begin, T end, Func f, size_t grainsize = 100)
+{
   static_assert(std::is_integral<T>::value, "end must be integral type");
   parallelize = parallelize && value_representation<size_t>(end);
   parallelize ? parallel_for(begin, end, f, grainsize)
