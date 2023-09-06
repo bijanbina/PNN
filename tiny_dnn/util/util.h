@@ -236,11 +236,11 @@ void CNN_LOG_VECTOR(const vec_t& vec, const std::string& name) {
 
 template <typename T, typename Pred, typename Sum>
 size_t sumif(const std::vector<T> &vec, Pred p, Sum s) {
-  size_t sum = 0;
-  for (size_t i = 0; i < vec.size(); i++) {
-    if (p(i)) sum += s(vec[i]);
-  }
-  return sum;
+    size_t sum = 0;
+    for (size_t i = 0; i < vec.size(); i++) {
+        if (p(i)) sum += s(vec[i]);
+    }
+    return sum;
 }
 
 template <typename T, typename Pred>

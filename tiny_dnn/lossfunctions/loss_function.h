@@ -15,25 +15,29 @@ namespace tiny_dnn {
 
 // mean-squared-error loss function for regression
 class mse {
- public:
-  static float_t f(const vec_t &y, const vec_t &t) {
-    assert(y.size() == t.size());
-    float_t d{0.0};
+public:
+    static float_t f(const vec_t &y, const vec_t &t) {
+        assert(y.size() == t.size());
+        float_t d{0.0};
 
-    for (size_t i = 0; i < y.size(); ++i) d += (y[i] - t[i]) * (y[i] - t[i]);
+        for (size_t i = 0; i < y.size(); ++i) d += (y[i] - t[i]) * (y[i] - t[i]);
 
-    return d / static_cast<float_t>(y.size());
-  }
+        return d / static_cast<float_t>(y.size());
+    }
 
-  static vec_t df(const vec_t &y, const vec_t &t) {
-    assert(y.size() == t.size());
-    vec_t d(t.size());
-    float_t factor = float_t(2) / static_cast<float_t>(t.size());
+    static vec_t df(const vec_t &y, const vec_t &t)
+    {
+        assert(y.size() == t.size());
+        vec_t d(t.size());
+        float_t factor = float_t(2) / static_cast<float_t>(t.size());
 
-    for (size_t i = 0; i < y.size(); ++i) d[i] = factor * (y[i] - t[i]);
+        for(size_t i = 0; i < y.size(); ++i)
+        {
+            d[i] = factor * (y[i] - t[i]);
+        }
 
-    return d;
-  }
+        return d;
+    }
 };
 
 // absolute loss function for regression
@@ -151,21 +155,26 @@ class cross_entropy_multiclass {
 };
 
 template <typename E>
-vec_t gradient(const vec_t &y, const vec_t &t) {
-  assert(y.size() == t.size());
-  return E::df(y, t);
+vec_t gradient(const vec_t &y, const vec_t &t)
+{
+    assert(y.size() == t.size());
+    return E::df(y, t);
 }
 
 template <typename E>
 std::vector<vec_t> gradient(const std::vector<vec_t> &y,
-                            const std::vector<vec_t> &t) {
-  std::vector<vec_t> grads(y.size());
+                            const std::vector<vec_t> &t)
+{
+    std::vector<vec_t> grads(y.size());
 
-  assert(y.size() == t.size());
+    assert(y.size() == t.size());
 
-  for (size_t i = 0; i < y.size(); i++) grads[i] = gradient<E>(y[i], t[i]);
+    for(size_t i = 0; i < y.size(); i++)
+    {
+        grads[i] = gradient<E>(y[i], t[i]);
+    }
 
-  return grads;
+    return grads;
 }
 
 inline void apply_cost_if_defined(std::vector<vec_t> &sample_gradient,
