@@ -286,7 +286,7 @@ struct double_avx {
   static CNN_MUST_INLINE void store(value_type *px, const register_type &v);
 
   static CNN_MUST_INLINE value_type resemble(const register_type &x) {
-    alignas(32) double tmp[4];
+    alignas(16) double tmp[4];
     _mm256_store_pd(tmp, x);
     return std::accumulate(tmp, tmp + 4, 0.0);
   }
