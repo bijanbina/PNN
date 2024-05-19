@@ -2,18 +2,12 @@ CONFIG -= qt
 
 TEMPLATE = lib
 CONFIG += staticlib
-INCLUDEPATH += Include
+INCLUDEPATH += ../
 
 DEFINES += PA_USE_WMME
 LIBS += -lwinmm -lole32 -luuid
 
 CONFIG += c++11
-
-# Default rules for deployment.
-unix {
-    target.path = $$[QT_INSTALL_PLUGINS]/generic
-}
-!isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
     Sources/common/pa_allocation.h \
