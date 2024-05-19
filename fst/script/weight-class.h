@@ -84,7 +84,7 @@ class WeightClassImpl : public WeightImplBase {
   }
 
   WeightClassImpl<W> &PowerEq(size_t n) final {
-    weight_ = Power<W>(weight_, n);
+    weight_ = Power(weight_, n);
     return *this;
   }
 

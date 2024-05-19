@@ -5,6 +5,7 @@
 #define FST_EXTENSIONS_NGRAM_NTHBIT_H_
 
 #include <fst/types.h>
+#include <fst/compat.h>
 
 #ifdef __BMI2__
 // PDEP requires BMI2.

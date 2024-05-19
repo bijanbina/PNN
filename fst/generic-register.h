@@ -6,7 +6,7 @@
 
 #include <fst/compat.h>
 #ifndef FST_NO_DYNAMIC_LINKING
-//#include <dlfcn.h>
+#include <dlfcn.h>
 #endif
 #include <map>
 #include <string>
@@ -66,11 +66,11 @@ class GenericRegister {
     return EntryType();
 #else
     const auto so_filename = ConvertKeyToSoFilename(key);
-//    void *handle = dlopen(so_filename.c_str(), RTLD_LAZY);
-//    if (handle == nullptr) {
-//      LOG(ERROR) << "GenericRegister::GetEntry: " << dlerror();
+    void *handle = dlopen(so_filename.c_str(), RTLD_LAZY);
+    if (handle == nullptr) {
+      LOG(ERROR) << "GenericRegister::GetEntry: " << dlerror();
       return EntryType();
-//    }
+    }
 #ifdef RUN_MODULE_INITIALIZERS
     RUN_MODULE_INITIALIZERS();
 #endif

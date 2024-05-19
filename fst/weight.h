@@ -131,12 +131,27 @@ constexpr size_t kNumRandomWeights = 5;
 
 // Weight property boolean constants needed for SFINAE.
 
+// MSVC compiler bug workaround: an expression containing W::Properties() cannot
+// be directly used as a value argument to std::enable_if or integral_constant.
+// WeightPropertiesThunk<W>::Properties works instead, however.
+namespace bug {
 template <class W>
-using IsIdempotent = std::integral_constant<bool,
-    (W::Properties() & kIdempotent) != 0>;
+struct WeightPropertiesThunk {
+  WeightPropertiesThunk() = delete;
+  constexpr static const uint64 Properties = W::Properties();
+};
+
+template <class W, uint64 props>
+using TestWeightProperties = std::integral_constant<bool,
+        (WeightPropertiesThunk<W>::Properties & props) == props>;
+}  // namespace bug
 
 template <class W>
-using IsPath = std::integral_constant<bool, (W::Properties() & kPath) != 0>;
+using IsIdempotent = bug::TestWeightProperties<W, kIdempotent>;
+
+template <class W>
+using IsPath = bug::TestWeightProperties<W, kPath>;
+
 
 // Determines direction of division.
 enum DivideType {
@@ -165,37 +180,20 @@ enum DivideType {
 //
 // We define the strict version of this order below.
 
-// Declares the template with a second parameter determining whether or not it
-// can actually be constructed.
-template <class W, class IdempotentType = void>
-class NaturalLess;
-
-// Variant for idempotent weights.
 template <class W>
-class NaturalLess<W, typename std::enable_if<IsIdempotent<W>::value>::type> {
- public:
+class NaturalLess {
+public:
   using Weight = W;
 
-  NaturalLess() {}
-
-  bool operator()(const Weight &w1, const Weight &w2) const {
-    return w1 != w2 && Plus(w1, w2) == w1;
-  }
-};
-
-// Non-constructible variant for non-idempotent weights.
-template <class W>
-class NaturalLess<W, typename std::enable_if<!IsIdempotent<W>::value>::type> {
- public:
-  using Weight = W;
-
-  // TODO(kbg): Trace down anywhere this is being instantiated, then add a
-  // static_assert to prevent this from being instantiated.
   NaturalLess() {
-    FSTERROR() << "NaturalLess: Weight type is not idempotent: " << W::Type();
+    if (!(W::Properties() & kIdempotent)) {
+      FSTERROR() << "NaturalLess: Weight type is not idempotent: " << W::Type();
+    }
   }
 
-  bool operator()(const Weight &, const Weight &) const { return false; }
+  bool operator()(const W &w1, const W &w2) const {
+    return (Plus(w1, w2) == w1) && w1 != w2;
+  }
 };
 
 // Power is the iterated product for arbitrary semirings such that Power(w, 0)

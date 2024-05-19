@@ -11,11 +11,6 @@
 #include <fst/compat.h>
 #include <fst/flags.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#include <fst/compat.h>
-#endif
-
 namespace fst {
 
 // A memory region is a simple abstraction for allocated memory or data from
@@ -30,9 +25,6 @@ struct MemoryRegion {
   void *mmap;
   size_t size;
   int offset;
-#ifdef _WIN32
-  HANDLE file_mapping;
-#endif
 };
 
 class MappedFile {
