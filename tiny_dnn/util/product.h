@@ -59,7 +59,7 @@ struct scalar_generic {
     return x;
   }
 
-  static CNN_MUST_INLINE bool is_aligned(value_type *p) { return true; }
+//  static CNN_MUST_INLINE bool is_aligned(value_type *p) { return true; }
 };
 
 #ifdef CNN_USE_SSE
@@ -621,118 +621,37 @@ CNN_MUST_INLINE CNN_VECTORIZE_TYPE::register_type accumulate(
 
 // dst[i] += c
 template <typename T>
-void add(T c, std::size_t size, T *dst) {
-  bool is_dst_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)dst);
-  if (is_dst_aligned) {
+void add(T c, std::size_t size, T *dst)
+{
     detail::add<CNN_VECTORIZE_TYPE, std::true_type>(c, size, dst);
-  } else {
-    detail::add<CNN_VECTORIZE_TYPE, std::false_type>(c, size, dst);
-  }
 }
 
 // dst[i] += src[i]
 template <typename T>
 void add(const T *src, std::size_t size, T *dst) {
-  bool src_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)src);
-  bool dst_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)dst);
-  if (src_aligned) {
-    if (dst_aligned) {
       detail::add<CNN_VECTORIZE_TYPE, std::true_type, std::true_type>(src, size,
                                                                       dst);
-    } else {
-      detail::add<CNN_VECTORIZE_TYPE, std::true_type, std::false_type>(
-        src, size, dst);
-    }
-  } else {
-    if (dst_aligned) {
-      detail::add<CNN_VECTORIZE_TYPE, std::false_type, std::true_type>(
-        src, size, dst);
-    } else {
-      detail::add<CNN_VECTORIZE_TYPE, std::false_type, std::false_type>(
-        src, size, dst);
-    }
-  }
 }
 
 // dst[i] += c * src[i]
 template <typename T>
 void muladd(const T *src, T c, std::size_t size, T *dst) {
-  bool src_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)src);
-  bool dst_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)dst);
-  if (src_aligned) {
-    if (dst_aligned) {
       detail::muladd<CNN_VECTORIZE_TYPE, std::true_type, std::true_type>(
         src, c, size, dst);
-    } else {
-      detail::muladd<CNN_VECTORIZE_TYPE, std::true_type, std::false_type>(
-        src, c, size, dst);
-    }
-  } else {
-    if (dst_aligned) {
-      detail::muladd<CNN_VECTORIZE_TYPE, std::false_type, std::true_type>(
-        src, c, size, dst);
-    } else {
-      detail::muladd<CNN_VECTORIZE_TYPE, std::false_type, std::false_type>(
-        src, c, size, dst);
-    }
-  }
 }
 
 // sum(s1[i] * s2[i])
 template <typename T>
 T dot(const T *s1, const T *s2, std::size_t size) {
-  bool s1_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)s1);
-  bool s2_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)s2);
-  if (s1_aligned) {
-    if (s2_aligned) {
       return detail::dot_product<CNN_VECTORIZE_TYPE, std::true_type,
                                  std::true_type>(s1, s2, size);
-    } else {
-      return detail::dot_product<CNN_VECTORIZE_TYPE, std::true_type,
-                                 std::false_type>(s1, s2, size);
-    }
-  } else {
-    if (s2_aligned) {
-      return detail::dot_product<CNN_VECTORIZE_TYPE, std::false_type,
-                                 std::true_type>(s1, s2, size);
-    } else {
-      return detail::dot_product<CNN_VECTORIZE_TYPE, std::false_type,
-                                 std::false_type>(s1, s2, size);
-    }
-  }
 }
 
 /// dst[i] += src[i]
 template <typename T>
 void reduce(const T *src, std::size_t size, T *dst) {
-  bool src_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)src);
-  bool dst_aligned =
-    CNN_VECTORIZE_TYPE::is_aligned((CNN_VECTORIZE_TYPE::value_type *)dst);
-  if (src_aligned) {
-    if (dst_aligned) {
       detail::reduce<CNN_VECTORIZE_TYPE, std::true_type, std::true_type>(
         src, size, dst);
-    } else {
-      detail::reduce<CNN_VECTORIZE_TYPE, std::true_type, std::false_type>(
-        src, size, dst);
-    }
-  } else {
-    if (dst_aligned) {
-      detail::reduce<CNN_VECTORIZE_TYPE, std::false_type, std::true_type>(
-        src, size, dst);
-    } else {
-      detail::reduce<CNN_VECTORIZE_TYPE, std::false_type, std::false_type>(
-        src, size, dst);
-    }
-  }
 }
 
 template <typename T>
