@@ -55,7 +55,9 @@ bool IsFstHeader(std::istream &strm, const string &) {
 
 // Checks FST magic number and reads in the header; if rewind = true,
 // the stream is repositioned before call if possible.
-bool FstHeader::Read(std::istream &strm, const string &source, bool rewind) {
+bool FstHeader::Read(std::istream &strm, const string &source,
+                     bool rewind)
+{
   int64 pos = 0;
   if (rewind) pos = strm.tellg();
   int32 magic_number = 0;

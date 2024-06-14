@@ -852,7 +852,8 @@ bool FstImpl<Arc>::ReadHeader(std::istream &strm, const FstReadOptions &opts,
   if (opts.isymbols) {
     isymbols_.reset(opts.isymbols->Copy());
   }
-  if (opts.osymbols) {
+  if( opts.osymbols )
+  {
     osymbols_.reset(opts.osymbols->Copy());
   }
   return true;

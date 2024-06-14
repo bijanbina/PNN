@@ -628,9 +628,10 @@ void add(T c, std::size_t size, T *dst)
 
 // dst[i] += src[i]
 template <typename T>
-void add(const T *src, std::size_t size, T *dst) {
-      detail::add<CNN_VECTORIZE_TYPE, std::true_type, std::true_type>(src, size,
-                                                                      dst);
+void add(const T *src, std::size_t size, T *dst)
+{
+  detail::add<CNN_VECTORIZE_TYPE, std::true_type,
+          std::true_type>(src, size, dst);
 }
 
 // dst[i] += c * src[i]
