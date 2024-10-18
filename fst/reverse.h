@@ -37,7 +37,8 @@ void Reverse(const Fst<FromArc> &ifst, MutableFst<ToArc> *ofst,
   ofst->DeleteStates();
   ofst->SetInputSymbols(ifst.InputSymbols());
   ofst->SetOutputSymbols(ifst.OutputSymbols());
-  if (ifst.Properties(kExpanded, false)) {
+  if(ifst.Properties(kExpanded, false))
+  {
     ofst->ReserveStates(CountStates(ifst) + 1);
   }
   StateId istart = ifst.Start();

@@ -126,6 +126,7 @@ class VectorState {
     }
   }
 
+  std::vector<A, ArcAllocator> arcs_;  // Arc container.
  private:
   // Update the number of epsilons as a result of having added an arc.
   void IncrementNumEpsilons(const Arc &arc) {
@@ -136,7 +137,6 @@ class VectorState {
   Weight final_;                       // Final weight.
   size_t niepsilons_;                  // # of input epsilons
   size_t noepsilons_;                  // # of output epsilons
-  std::vector<A, ArcAllocator> arcs_;  // Arc container.
 };
 
 namespace internal {
