@@ -1,15 +1,16 @@
-#ifndef AJDLLGEN_H
-#define AJDLLGEN_H
+#ifndef AJ_DLLGEN_H
+#define AJ_DLLGEN_H
 
 #include <QFile>
 #include <QDir>
 #include <windows.h>
 
 void aj_dllGen();
+void aj_setWorkingDir();
 void aj_fillBatFile(QFile *bat_file);
 void aj_addCopyDllCmds(QFile *bat_file, QString project_path);
 void aj_addLuaDll(QFile *bat_file, QString project_path);
-int aj_qmlExist(QString path);
+int  aj_qmlExist(QString path);
 QString aj_getQtCompiler();
 QString aj_getQtPath();
 QString aj_getQtShortCut();
@@ -30,4 +31,4 @@ QString dl_getLinkPathB(QString name);
 HRESULT dl_resolveIt(LPCSTR lnk_path, char *target);
 QString dl_findAppPath(QString path, QString pattern);
 
-#endif // AJDLLGEN_H
+#endif // AJ_DLLGEN_H

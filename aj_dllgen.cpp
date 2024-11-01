@@ -505,3 +505,19 @@ QString dl_findAppPath(QString path, QString pattern)
     }
     return "";
 }
+
+// if exe path contain 'debug' or 'release' swith to
+// parent dir
+void aj_setWorkingDir()
+{
+    QString cur_path = QDir::currentPath();
+    QStringList path_split = cur_path.split("/",
+                                            Qt::SkipEmptyParts);
+    QString dir_name = path_split.last();
+    if( dir_name=="debug" || dir_name=="release" )
+    {
+        path_split.removeLast();
+        cur_path = path_split.join("/");
+        QDir::setCurrent(cur_path);
+    }
+}
