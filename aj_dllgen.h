@@ -6,6 +6,8 @@
 #include <windows.h>
 
 void aj_dllGen();
+void aj_requireAVX();
+void aj_registerMsg();
 void aj_setWorkingDir();
 void aj_fillBatFile(QFile *bat_file);
 void aj_addCopyDllCmds(QFile *bat_file, QString project_path);

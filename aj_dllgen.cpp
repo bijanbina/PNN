@@ -2,8 +2,12 @@
 #include <QDebug>
 #include <shobjidl.h>
 #include <shlguid.h>
+#include <cpuid.h>
 #include <QFileInfo>
+#include <QDateTime>
 #include <QCoreApplication>
+
+QFile    log_file;
 
 void aj_dllGen()
 {
@@ -520,4 +524,106 @@ void aj_setWorkingDir()
         cur_path = path_split.join("/");
         QDir::setCurrent(cur_path);
     }
+}
+
+void aj_requireAVX()
+{
+    unsigned int eax, ebx, ecx, edx;
+
+    if( !__get_cpuid_max(0, nullptr) )
+    {
+        qDebug() << "CPUID instruction is not supported.";
+        exit(2);
+    }
+
+    __get_cpuid(1, &eax, &ebx, &ecx, &edx);
+
+    if( !(ecx & (1 << 28)) )
+    {
+        qDebug() << "Error: AVX support is not available"
+                    " (AVX bit not set).";
+        exit(2);
+    }
+
+    if( !(ecx & (1 << 27)) )
+    {
+        qDebug() << "Error: AVX support is not available"
+                    " (OS XSAVE not supported).";
+        exit(2);
+    }
+
+    unsigned long long xcrFeatureMask = 0;
+    asm volatile ("xgetbv" : "=a" (xcrFeatureMask)
+                  : "c" (0) : "%edx");
+
+    if( (xcrFeatureMask & 0x6)!=0x6 )
+    {
+        qDebug() << "Error: AVX support is not available"
+                    " (AVX state not enabled in XCR0).";
+        exit(2);
+    }
+}
+
+void aj_msgHandler(QtMsgType type,
+                   const QMessageLogContext &context,
+                   const QString &msg)
+{
+    (void) context; // to supress unused warning
+    // Prepare the message with a timestamp
+    QDateTime now   = QDateTime::currentDateTime();
+    QString now_str = now.toString("yyyy-MM-dd HH:mm:ss");
+    QString logMessage = QString("[%1] ").arg(now_str);
+
+    // Add the message type
+    if( type==QtDebugMsg )
+    {
+        logMessage += "DEBUG: ";
+    }
+    else if( type==QtInfoMsg )
+    {
+        logMessage += "INFO: ";
+    }
+    else if( type==QtWarningMsg )
+    {
+        logMessage += "WARNING: ";
+    }
+    else if( type==QtCriticalMsg )
+    {
+        logMessage += "CRITICAL: ";
+    }
+    else if( type==QtFatalMsg )
+    {
+        logMessage += "FATAL: ";
+    }
+
+    logMessage += msg;
+
+    // Output to console
+    QTextStream(stdout) << logMessage << Qt::endl;
+
+    // Write to file
+    if( log_file.isOpen() )
+    {
+        QTextStream logStream(&log_file);
+        logStream << logMessage << Qt::endl;
+    }
+
+    // Handle fatal messages
+    if( type==QtFatalMsg )
+    {
+        abort();
+    }
+}
+
+void aj_registerMsg()
+{
+    // Open log file
+    log_file.setFileName("debug.log");
+    if( !log_file.open(QIODevice::Append | QIODevice::Text))
+    {
+        qDebug() << "Unable to open log file.";
+    }
+
+    // Install the custom message handler
+    qInstallMessageHandler(aj_msgHandler);
 }
